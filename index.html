@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Poster Exhibition</title>
+
+  <style>
+    :root{
+      --bg1:#070A12;
+      --bg2:#0B1230;
+      --glass:rgba(255,255,255,.08);
+      --border:rgba(255,255,255,.14);
+      --text:rgba(255,255,255,.90);
+      --muted:rgba(255,255,255,.62);
+      --shadow:0 30px 90px rgba(0,0,0,.65);
+      --radius:18px;
+      --max:1200px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 20% 10%, rgba(118,75,255,.35), transparent 55%),
+        radial-gradient(900px 600px at 80% 20%, rgba(0,217,255,.22), transparent 50%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:10;
+      padding:16px 0;
+      backdrop-filter: blur(12px);
+      background: linear-gradient(180deg, rgba(7,10,18,.86), rgba(7,10,18,.40));
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .wrap{ max-width:var(--max); margin:0 auto; padding:0 18px 40px; }
+
+    .lang{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+    .pill{
+      display:inline-flex;
+      gap:6px;
+      padding:6px;
+      border-radius:999px;
+      background:var(--glass);
+      border:1px solid var(--border);
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    .pill button{
+      border:0;
+      background:transparent;
+      color:var(--muted);
+      cursor:pointer;
+      font-weight:650;
+      padding:10px 16px;
+      border-radius:999px;
+      transition:all .2s ease;
+    }
+    .pill button.active{
+      color:var(--text);
+      background: linear-gradient(135deg, rgba(118,75,255,.48), rgba(0,217,255,.26));
+      border:1px solid rgba(255,255,255,.14);
+    }
+
+    header{
+      text-align:center;
+      padding:32px 0 18px;
+    }
+    h1{
+      margin:0 0 8px;
+      font-size:clamp(22px, 2.8vw, 34px);
+      font-weight:800;
+      letter-spacing:-.6px;
+    }
+    p.sub{
+      margin:0;
+      color:var(--muted);
+      font-size:14.5px;
+    }
+
+    /* Exhibition grid: 4 + 4 (responsive) */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap:18px;
+      margin-top:18px;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 520px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    /* Poster tile (A4-ish) */
+    .tile{
+      position:relative;
+      border-radius: var(--radius);
+      overflow:hidden;
+      background: linear-gradient(180deg, var(--glass), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      box-shadow: var(--shadow);
+      cursor:pointer;
+      transform: translateZ(0);
+      transition: transform .25s ease;
+    }
+    .tile:hover{ transform: translateY(-5px); }
+
+    .thumb{
+      width:100%;
+      aspect-ratio: 210 / 297;
+      object-fit: cover;
+      display:block;
+      background: rgba(255,255,255,.04);
+      transition: transform .35s ease;
+    }
+    .tile:hover .thumb{ transform: scale(1.02); }
+
+    .meta{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:12px 12px 14px;
+      border-top:1px solid rgba(255,255,255,.10);
+    }
+    .title{
+      margin:0;
+      font-size:13.5px;
+      font-weight:700;
+      color: rgba(255,255,255,.86);
+    }
+    .pdfhint{
+      margin:0;
+      font-size:12px;
+      color: var(--muted);
+      white-space:nowrap;
+    }
+
+    /* Lightbox */
+    dialog#lightbox{
+      border:none;
+      padding:0;
+      width:100vw;
+      height:100vh;
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(12px);
+    }
+    dialog::backdrop{ background: rgba(0,0,0,.72); }
+
+    .lb{
+      width:min(980px, 92vw);
+      margin:auto;
+      border-radius:22px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(15,18,35,.65);
+      box-shadow: 0 30px 90px rgba(0,0,0,.65);
+    }
+    .lb img{
+      width:100%;
+      aspect-ratio: 210/297;
+      object-fit: contain;
+      background: rgba(255,255,255,.04);
+      display:block;
+    }
+    .lbbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:12px 14px;
+      border-top:1px solid rgba(255,255,255,.10);
+    }
+    .lbtitle{ margin:0; font-size:13.5px; color: rgba(255,255,255,.86); }
+    .actions{ display:flex; gap:10px; align-items:center; }
+    .btn{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.90);
+      padding:8px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:700;
+      text-decoration:none;
+      font-size:13px;
+    }
+    .btn:hover{ background: rgba(255,255,255,.10); }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="wrap">
+      <div class="lang">
+        <div class="pill">
+          <button id="btnDE" class="active" type="button">Deutsch</button>
+          <button id="btnEN" type="button">English</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <header>
+      <h1 id="headline">Digitale Ausstellung</h1>
+      <p class="sub" id="subline">Klicken Sie auf ein Poster zum Vergrößern. Im Viewer können Sie das PDF öffnen.</p>
+    </header>
+
+    <main class="grid" id="grid" aria-label="Poster grid"></main>
+  </div>
+
+  <dialog id="lightbox" aria-label="Poster viewer">
+    <div class="lb" role="document">
+      <img id="lbImg" alt="" />
+      <div class="lbbar">
+        <p class="lbtitle" id="lbTitle"></p>
+        <div class="actions">
+          <a class="btn" id="lbPdf" href="#" target="_blank" rel="noopener">PDF öffnen</a>
+          <button class="btn" id="lbClose" type="button">Schließen</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    // 1) THUMBNAILS (Bilder) für die Grid-Ansicht
+    // 2) PDF-LINKS für das Öffnen im neuen Tab
+    // Passen Sie nur diese Listen an (8 Einträge je Sprache).
+
+    const posters = {
+      de: [
+        { title: "Poster 1", thumb: "thumbs/de/01.jpg", pdf: "pdf/de/poster01.pdf" },
+        { title: "Poster 2", thumb: "thumbs/de/02.jpg", pdf: "pdf/de/poster02.pdf" },
+        { title: "Poster 3", thumb: "thumbs/de/03.jpg", pdf: "pdf/de/poster03.pdf" },
+        { title: "Poster 4", thumb: "thumbs/de/04.jpg", pdf: "pdf/de/poster04.pdf" },
+        { title: "Poster 5", thumb: "thumbs/de/05.jpg", pdf: "pdf/de/poster05.pdf" },
+        { title: "Poster 6", thumb: "thumbs/de/06.jpg", pdf: "pdf/de/poster06.pdf" },
+        { title: "Poster 7", thumb: "thumbs/de/07.jpg", pdf: "pdf/de/poster07.pdf" },
+        { title: "Poster 8", thumb: "thumbs/de/08.jpg", pdf: "pdf/de/poster08.pdf" },
+      ],
+      en: [
+        { title: "Poster 1", thumb: "thumbs/en/01.jpg", pdf: "pdf/en/poster01.pdf" },
+        { title: "Poster 2", thumb: "thumbs/en/02.jpg", pdf: "pdf/en/poster02.pdf" },
+        { title: "Poster 3", thumb: "thumbs/en/03.jpg", pdf: "pdf/en/poster03.pdf" },
+        { title: "Poster 4", thumb: "thumbs/en/04.jpg", pdf: "pdf/en/poster04.pdf" },
+        { title: "Poster 5", thumb: "thumbs/en/05.jpg", pdf: "pdf/en/poster05.pdf" },
+        { title: "Poster 6", thumb: "thumbs/en/06.jpg", pdf: "pdf/en/poster06.pdf" },
+        { title: "Poster 7", thumb: "thumbs/en/07.jpg", pdf: "pdf/en/poster07.pdf" },
+        { title: "Poster 8", thumb: "thumbs/en/08.jpg", pdf: "pdf/en/poster08.pdf" },
+      ]
+    };
+
+    const i18n = {
+      de: {
+        htmlLang: "de",
+        headline: "Digitale Ausstellung",
+        subline: "Klicken Sie auf ein Poster zum Vergrößern. Im Viewer können Sie das PDF öffnen.",
+        pdfOpen: "PDF öffnen",
+        close: "Schließen",
+        hint: "PDF"
+      },
+      en: {
+        htmlLang: "en",
+        headline: "Digital Exhibition",
+        subline: "Click a poster to enlarge it. In the viewer you can open the PDF.",
+        pdfOpen: "Open PDF",
+        close: "Close",
+        hint: "PDF"
+      }
+    };
+
+    const grid = document.getElementById("grid");
+    const btnDE = document.getElementById("btnDE");
+    const btnEN = document.getElementById("btnEN");
+    const headline = document.getElementById("headline");
+    const subline = document.getElementById("subline");
+
+    const lightbox = document.getElementById("lightbox");
+    const lbImg = document.getElementById("lbImg");
+    const lbTitle = document.getElementById("lbTitle");
+    const lbPdf = document.getElementById("lbPdf");
+    const lbClose = document.getElementById("lbClose");
+
+    function setActiveLang(lang){
+      btnDE.classList.toggle("active", lang === "de");
+      btnEN.classList.toggle("active", lang === "en");
+    }
+
+    function openLightbox(p, lang){
+      const t = i18n[lang];
+      lbImg.src = p.thumb;
+      lbImg.alt = p.title;
+      lbTitle.textContent = p.title;
+      lbPdf.textContent = t.pdfOpen;
+      lbPdf.href = p.pdf;
+      lbClose.textContent = t.close;
+
+      lightbox.showModal();
+    }
+
+    function render(lang){
+      const t = i18n[lang];
+      document.documentElement.lang = t.htmlLang;
+      headline.textContent = t.headline;
+      subline.textContent = t.subline;
+      setActiveLang(lang);
+
+      // Persist language in URL + localStorage
+      localStorage.setItem("lang", lang);
+      const url = new URL(window.location.href);
+      url.searchParams.set("lang", lang);
+      history.replaceState({}, "", url);
+
+      grid.innerHTML = "";
+      posters[lang].forEach((p) => {
+        const tile = document.createElement("article");
+        tile.className = "tile";
+        tile.tabIndex = 0;
+
+        tile.innerHTML = `
+          <img class="thumb" src="${p.thumb}" alt="${p.title}">
+          <div class="meta">
+            <p class="title">${p.title}</p>
+            <p class="pdfhint">${t.hint}</p>
+          </div>
+        `;
+
+        const handler = () => openLightbox(p, lang);
+        tile.addEventListener("click", handler);
+        tile.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handler(); }
+        });
+
+        grid.appendChild(tile);
+      });
+    }
+
+    function initialLang(){
+      const url = new URL(window.location.href);
+      const q = url.searchParams.get("lang");
+      if (q === "de" || q === "en") return q;
+      const saved = localStorage.getItem("lang");
+      if (saved === "de" || saved === "en") return saved;
+      return "de";
+    }
+
+    btnDE.addEventListener("click", () => render("de"));
+    btnEN.addEventListener("click", () => render("en"));
+
+    lbClose.addEventListener("click", () => lightbox.close());
+    lightbox.addEventListener("click", (e) => {
+      // click outside the card closes
+      const rect = document.querySelector(".lb").getBoundingClientRect();
+      const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+      if (!inside) lightbox.close();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && lightbox.open) lightbox.close();
+    });
+
+    render(initialLang());
+  </script>
+</body>
+</html>
